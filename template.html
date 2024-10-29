@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title><!--diff2html-title--></title>
+    <!--diff2html-css-->
+    <!--diff2html-js-ui-->
+
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const sideBySideElement = document.getElementById('side-by-side-diff');
+        const lineByLineElement = document.getElementById('line-by-line-diff');
+        const styleBtn = document.getElementById('styleBtn');
+
+        const sideBySideHTMLUI = new Diff2HtmlUI(sideBySideElement);
+        sideBySideHTMLUI.fileListToggle(true);
+        sideBySideHTMLUI.fileContentToggle();
+        sideBySideHTMLUI.synchronisedScroll();
+        sideBySideHTMLUI.highlightCode();
+
+        const lineByLineHTMLUI = new Diff2HtmlUI(lineByLineElement);
+        lineByLineHTMLUI.fileListToggle(true);
+        lineByLineHTMLUI.fileContentToggle();
+        lineByLineHTMLUI.synchronisedScroll();
+        lineByLineHTMLUI.highlightCode();
+
+        let isSideBySide = true;
+        styleBtn.onclick = function() {
+          if (isSideBySide) {
+            isSideBySide = false;
+            lineByLineElement.style.display = 'none';
+            sideBySideElement.style.display = '';
+            styleBtn.innerText = "Split";
+          } else {
+            isSideBySide = true;
+            lineByLineElement.style.display = '';
+            sideBySideElement.style.display = 'none';
+            styleBtn.innerText = "Unified";
+          }
+        }
+
+      });
+    </script>
+  </head>
+  <body style="text-align: center; font-family: 'Source Sans Pro', sans-serif">
+    <h1><!--diff2html-header--></h1>
+    <h2 style="display: inline-block; text-align: left;"><!--diff2html-versions--></h2>
+    <button id="styleBtn" style="display: block; margin-left: auto; margin-right: 10px;">Split</button>
+
+    <div id="side-by-side-diff">
+      <!--diff2html-side-diff-->
+    </div>
+
+    <div id="line-by-line-diff" style="display: none;">
+      <!--diff2html-line-diff-->
+    </div>
+  </body>
+</html>
