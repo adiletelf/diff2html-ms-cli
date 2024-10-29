@@ -5,35 +5,50 @@ import { fileURLToPath } from "url";
 import {parse, html} from "diff2html";
 import { autoGitHubTheme, autoBaseStyle } from "./styles.js";
 import { ColorSchemeType } from "diff2html/lib/types.js";
+import { setup, defaults as defaultArgv } from "./yargs.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDirectory = path.resolve(__dirname, "..");
 
-// 1. Read the arguments
-const diffString: string = readDiffString(rootDirectory);
-const previousVersions: string[] = [
-    "1.0.11.0,f7be17e,Rejected",
-    "1.2.3.0,b3f9dd2,Approved",
-    "1.4.0.0,477fd03,Rejected",
-    "1.4.1.0,719a4ea,Current",
-];
-const args = previousVersions.join(";");
-const versions = args.split(';');
-const versionsHTMLContent: string = versions.map((version) => `<span>${version.replaceAll(',', ' - ')}</span>`).join('<br/>');
-const pageTitle: string = "Charticulator Visual Community (View) [Individual Entrepreneur Ilfat Galiev]";
+export async function main() {
+    try {
+        const argv = await setup();
 
-const { lineByLineHTMLContent, sideBySideHTMLContent } = generateDiffHTMLContent(diffString);
-const modifiedTemplate = replacePlaceholdersInTemplate({ pageTitle, versionsHTMLContent, lineByLineHTMLContent, sideBySideHTMLContent, dirname: rootDirectory });
+        const diffString: string = readDiffString(argv.file || path.resolve(rootDirectory, defaultArgv.file));
+        const { lineByLineHTMLContent, sideBySideHTMLContent } = generateDiffHTMLContent(diffString);
 
-writeFileSync(path.resolve(rootDirectory, "diff.html"), modifiedTemplate);
+        const versions = argv.versionList.split(';');
+        const versionsHTMLContent: string = versions.map((version) => `<span>${version.replaceAll(',', ' - ')}</span>`).join('<br/>');
+
+        const modifiedTemplate = replacePlaceholdersInTemplate({
+            pageTitle: argv.title,
+            rootDirectory,
+            versionsHTMLContent,
+            lineByLineHTMLContent,
+            sideBySideHTMLContent,
+        });
+
+        writeFileSync(argv.destination || path.resolve(rootDirectory, defaultArgv.destination), modifiedTemplate);
+
+    } catch (error) {
+        if (process.exitCode === undefined || process.exitCode === 0) {
+            process.exitCode = 1;
+        }
+
+        console.error(error);
+    }
+}
+
+main();
+
 
 function replaceExactly(value: string, searchValue: string, replaceValue: string): string {
     return value.replace(searchValue, () => replaceValue);
 }
 
-function readDiffString(dirname: string): string {
-    return readFileSync(path.resolve(dirname, "git.diff"), "utf8");
+function readDiffString(filePath: string): string {
+    return readFileSync(filePath, "utf8");
 }
 
 function generateDiffHTMLContent(diffString: string, colorScheme: ColorSchemeType = ColorSchemeType.AUTO): { lineByLineHTMLContent: string; sideBySideHTMLContent: string; } {
@@ -45,10 +60,10 @@ function generateDiffHTMLContent(diffString: string, colorScheme: ColorSchemeTyp
     return { lineByLineHTMLContent, sideBySideHTMLContent };
 }
 
-function replacePlaceholdersInTemplate({ dirname, pageTitle, versionsHTMLContent, lineByLineHTMLContent, sideBySideHTMLContent }: { dirname: string, pageTitle: string; versionsHTMLContent: string; lineByLineHTMLContent: string; sideBySideHTMLContent: string; }): string {
-    const template = readFileSync(path.resolve(dirname, "template.html"), "utf8");
-    const cssContent = readFileSync(path.resolve(dirname, "node_modules/diff2html/bundles/css/diff2html.min.css"), "utf8");
-    const slimUIContent = readFileSync(path.resolve(dirname, "node_modules/diff2html/bundles/js/diff2html-ui-slim.min.js"), "utf8");
+function replacePlaceholdersInTemplate({ pageTitle, rootDirectory, versionsHTMLContent, lineByLineHTMLContent, sideBySideHTMLContent }: { pageTitle: string; rootDirectory: string; versionsHTMLContent: string; lineByLineHTMLContent: string; sideBySideHTMLContent: string; }): string {
+    const template = readFileSync(path.resolve(rootDirectory, "template.html"), "utf8");
+    const cssContent = readFileSync(path.resolve(rootDirectory, "node_modules/diff2html/bundles/css/diff2html.min.css"), "utf8");
+    const slimUIContent = readFileSync(path.resolve(rootDirectory, "node_modules/diff2html/bundles/js/diff2html-ui-slim.min.js"), "utf8");
 
     const modifiedTemplate = [
         { searchValue: '<!--diff2html-title-->', replaceValue: pageTitle },
