@@ -1,16 +1,18 @@
 import { readFileSync, writeFileSync } from "fs";
-import path, { dirname } from "path";
+import path from "path";
 import { fileURLToPath } from "url";
 
 import {parse, html} from "diff2html";
 import { autoGitHubTheme, autoBaseStyle } from "./styles.js";
+import { ColorSchemeType } from "diff2html/lib/types.js";
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const __dirname = path.dirname(__filename);
+const rootDirectory = path.resolve(__dirname, "..");
 
 // 1. Read the arguments
-const diffString = readDiffString();
-const previousVersions = [
+const diffString: string = readDiffString(rootDirectory);
+const previousVersions: string[] = [
     "1.0.11.0,f7be17e,Rejected",
     "1.2.3.0,b3f9dd2,Approved",
     "1.4.0.0,477fd03,Rejected",
@@ -18,23 +20,23 @@ const previousVersions = [
 ];
 const args = previousVersions.join(";");
 const versions = args.split(';');
-const versionsHTMLContent = versions.map((version) => `<span>${version.replaceAll(',', ' - ')}</span>`).join('<br/>');
-const pageTitle = "Charticulator Visual Community (View) [Individual Entrepreneur Ilfat Galiev]";
+const versionsHTMLContent: string = versions.map((version) => `<span>${version.replaceAll(',', ' - ')}</span>`).join('<br/>');
+const pageTitle: string = "Charticulator Visual Community (View) [Individual Entrepreneur Ilfat Galiev]";
 
 const { lineByLineHTMLContent, sideBySideHTMLContent } = generateDiffHTMLContent(diffString);
-const modifiedTemplate = replacePlaceholdersInTemplate(pageTitle, versionsHTMLContent, lineByLineHTMLContent, sideBySideHTMLContent);
+const modifiedTemplate = replacePlaceholdersInTemplate({ pageTitle, versionsHTMLContent, lineByLineHTMLContent, sideBySideHTMLContent, dirname: rootDirectory });
 
-writeFileSync("diff.html", modifiedTemplate);
+writeFileSync(path.resolve(rootDirectory, "diff.html"), modifiedTemplate);
 
-function replaceExactly(value, searchValue, replaceValue) {
+function replaceExactly(value: string, searchValue: string, replaceValue: string): string {
     return value.replace(searchValue, () => replaceValue);
 }
 
-function readDiffString() {
-    return readFileSync("git.diff", "utf8");
+function readDiffString(dirname: string): string {
+    return readFileSync(path.resolve(dirname, "git.diff"), "utf8");
 }
 
-function generateDiffHTMLContent(diffString, colorScheme = 'auto') {
+function generateDiffHTMLContent(diffString: string, colorScheme: ColorSchemeType = ColorSchemeType.AUTO): { lineByLineHTMLContent: string; sideBySideHTMLContent: string; } {
     const lineByLineParsed = parse(diffString, { outputFormat: "line-by-line", colorScheme });
     const lineByLineHTMLContent = html(lineByLineParsed, { outputFormat: "line-by-line", colorScheme });
 
@@ -43,10 +45,10 @@ function generateDiffHTMLContent(diffString, colorScheme = 'auto') {
     return { lineByLineHTMLContent, sideBySideHTMLContent };
 }
 
-function replacePlaceholdersInTemplate(pageTitle, versionsHTMLContent, lineByLineHTMLContent, sideBySideHTMLContent) {
-    const template = readFileSync("template.html", "utf8");
-    const cssContent = readFileSync(path.resolve(__dirname, "node_modules/diff2html/bundles/css/diff2html.min.css"), "utf8");
-    const slimUIContent = readFileSync(path.resolve(__dirname, "node_modules/diff2html/bundles/js/diff2html-ui-slim.min.js"), "utf8");
+function replacePlaceholdersInTemplate({ dirname, pageTitle, versionsHTMLContent, lineByLineHTMLContent, sideBySideHTMLContent }: { dirname: string, pageTitle: string; versionsHTMLContent: string; lineByLineHTMLContent: string; sideBySideHTMLContent: string; }): string {
+    const template = readFileSync(path.resolve(dirname, "template.html"), "utf8");
+    const cssContent = readFileSync(path.resolve(dirname, "node_modules/diff2html/bundles/css/diff2html.min.css"), "utf8");
+    const slimUIContent = readFileSync(path.resolve(dirname, "node_modules/diff2html/bundles/js/diff2html-ui-slim.min.js"), "utf8");
 
     const modifiedTemplate = [
         { searchValue: '<!--diff2html-title-->', replaceValue: pageTitle },
