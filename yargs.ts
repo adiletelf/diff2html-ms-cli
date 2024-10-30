@@ -55,7 +55,7 @@ export async function setup(): Promise<Argv> {
             default: defaults.colorScheme,
         })
         .example(
-            'diff2html -F git.diff -D diff.html -T "Charticulator" -V "1.0.11.0,f7be17e,Rejected;1.2.3.0,b3f9dd2,Approved;1.4.0.0,477fd03,Rejected;1.4.1.0,719a4ea,Current"',
+            'diff2html -F git.diff -D diff.html -T "Visual name" -V "1.0.11.0,f7be17e,Rejected;1.2.3.0,b3f9dd2,Approved;1.4.0.0,477fd03,Rejected;1.4.1.0,719a4ea,Current"',
             'Generate a diff.html file with the specified options'
         )
         .help()
