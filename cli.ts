@@ -40,9 +40,6 @@ export async function main() {
     }
 }
 
-main();
-
-
 function replaceExactly(value: string, searchValue: string, replaceValue: string): string {
     return value.replace(searchValue, () => replaceValue);
 }
